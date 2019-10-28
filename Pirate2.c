@@ -32,7 +32,7 @@ void turnTo(float heading) {
 	const int ENC_PER_ROTATION = 2400;
 	const int kP = 1.0;
 	const int threshold = 10;
-	int target = ENC_PER_ROTATION * (360 / heading);
+	int target = ENC_PER_ROTATION * (heading / 360);
 	int startLeft = 0;
 	int startRight = 0;
 	int error = 0;
