@@ -30,26 +30,24 @@ int min(int a, int b) {
 
 void turnTo(float heading) {
 	const int ENC_PER_ROTATION = 2400;
+	const int kP = 1.0;
+	const int threshold = 10;
 	int target = ENC_PER_ROTATION * (360 / heading);
 	int startLeft = 0;
 	int startRight = 0;
 	int error = 0;
-	const int kP = 1.0;
-	const int threshold = 10;
 	int correct = 0;
 
+	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
 	while (correct < 4) {
 		error = target - (startRight - nMotorEncoder(right)) - (startLeft - nMotorEncoder(left));
+		error = min(max(kP * error, 127), -127);
+		drive(error, -error);
 		if (error < threshold) {
 			correct++;
-			if (correct == 4) {
-				error = 0;
-			}
 		} else {
 			correct = 0;
 		}
-		error = min(max(kP * error, 127), -127);
-		drive(error, -error);
 	}
 }
 
