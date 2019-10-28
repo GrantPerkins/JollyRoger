@@ -28,51 +28,37 @@ int min(int a, int b) {
 	return b;
 }
 
-task main()
-{
+void turnTo(float heading) {
+	const int ENC_PER_ROTATION = 2400;
+	int target = ENC_PER_ROTATION * (360 / heading);
 	int startLeft = 0;
 	int startRight = 0;
-	const int target = 600;
 	int error = 0;
-	const int kP = 10.0;
-	const int threshold = 0;
-	int change = 0;
+	const int kP = 1.0;
+	const int threshold = 10;
 	int correct = 0;
-	while (true) {
 
-
-		//drive(127,127);
-		if (vexRT[Btn8D]) {
-
-
-			if (startLeft == 0){
-				startLeft = nMotorEncoder(left);
-				startRight = nMotorEncoder(right);
+	while (correct < 4) {
+		error = target - (startRight - nMotorEncoder(right)) - (startLeft - nMotorEncoder(left));
+		if (error < threshold) {
+			correct++;
+			if (correct == 4) {
+				error = 0;
 			}
-
-
-			// turn 90
-			error = target - (startRight - nMotorEncoder(right)) - (startLeft - nMotorEncoder(left));
-			if (error < threshold) {
-				correct++;
-				if (correct == 4) {
-					error = 0;
-				}
-			} else {
-				correct = 0;
-			}
-			change = min(max(kP * error,255), -255);
-			drive(error, -error);
-
-			} else {
-			drive(vexRT[Ch3], vexRT[Ch2]);
-
-
-			if (startLeft!=0){
-				startLeft = 0;
-				startRight = 0;
-			}
+		} else {
+			correct = 0;
 		}
-
+		error = min(max(kP * error, 127), -127);
+		drive(error, -error);
 	}
+}
+
+task main()
+{
+	if (vexRT[Btn8D]) {
+		turnTo(90);
+	} else {
+		drive(vexRT[Ch3], vexRT[Ch2]);
+	}
+
 }
