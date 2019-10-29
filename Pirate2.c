@@ -76,6 +76,7 @@ task main() {
 		int rawRight = 0;
 		int rawLeft = 0;
 		float kP = 0.5;
+		float rightLeftRatio = 1.1;//encoder adjustment
 		int count = 0;
 		while (count < 5) {
 			if (absolute(leftError) < 10 && absolute(rightError) < 10) {
@@ -85,7 +86,7 @@ task main() {
 		}
 			rawLeft = kP * (target - (startLeft - nMotorEncoder(left)));
 			leftError = max(min(rawLeft, 127), -127);
-			rawRight = kP * (target - (startRight + nMotorEncoder(right)));
+			rawRight = kP * (target - (rightLeftRatio * (startRight + nMotorEncoder(right))));
 			rightError = max(min(rawRight, 127), -127);
 			drive(leftError, rightError);
 
