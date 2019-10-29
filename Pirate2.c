@@ -65,11 +65,35 @@ void turnTo(float heading) {
 }
 
 task main() {
+	const int target = 1000;
 	while (true) {
 		if (vexRT[Btn8D]) {
-			turnTo(90);
+
+		const int startLeft = nMotorEncoder(left);
+		const int startRight = nMotorEncoder(right);
+		int leftError = 0;
+		int rightError = 0;
+		int rawRight = 0;
+		int rawLeft = 0;
+		float kP = 0.5;
+		int count = 0;
+		while (count < 5) {
+			if (absolute(leftError) < 10 && absolute(rightError) < 10) {
+				count++;
 			} else {
+			count = 0;
+		}
+			rawLeft = kP * (target - (startLeft - nMotorEncoder(left)));
+			leftError = max(min(rawLeft, 127), -127);
+			rawRight = kP * (target - (startRight + nMotorEncoder(right)));
+			rightError = max(min(rawRight, 127), -127);
+			drive(leftError, rightError);
+
+		}
+
+		} else {
 			drive(vexRT[Ch3], vexRT[Ch2]);
 		}
+
 	}
 }
