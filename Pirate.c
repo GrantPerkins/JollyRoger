@@ -28,35 +28,73 @@ int min(int a, int b) {
 	return b;
 }
 
+int absolute(int x) {
+	if (x < 0) {
+		return -x;
+	}
+	return x;
+}
+
+
 void turnTo(float heading) {
-	const int ENC_PER_ROTATION = 2400;
-	const int kP = 1.0;
-	const int threshold = 10;
+	const int ENC_PER_ROTATION = 2450;
+	const float kP = 1.5;
+	const int threshold = 5;
 	int target = ENC_PER_ROTATION * (heading / 360);
-	int startLeft = 0;
-	int startRight = 0;
-	int error = 0;
+	int startLeft = nMotorEncoder(left);
+	int startRight = nMotorEncoder(right);
+	float error = 0;
 	int correct = 0;
+	int iter = 0;
+	const int ZERO_VELOCITY = 100;
+	const int MAX_ITER = 1000;
 
 	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
-	while (correct < 4) {
+	while (correct < ZERO_VELOCITY) {
+		iter++;
 		error = target - (startRight - nMotorEncoder(right)) - (startLeft - nMotorEncoder(left));
-		error = min(max(kP * error, 127), -127);
+		error = max(min(kP * error, 64), -64);
 		drive(error, -error);
-		if (error < threshold) {
+		if (absolute(error) < threshold) {
 			correct++;
 		} else {
 			correct = 0;
 		}
 	}
+	wait1Msec(1000);
 }
 
-task main()
-{
-	if (vexRT[Btn8D]) {
-		turnTo(90);
-	} else {
-		drive(vexRT[Ch3], vexRT[Ch2]);
-	}
+task main() {
+	const int target = 1000;
+	while (true) {
+		if (vexRT[Btn8D]) {
 
+		const int startLeft = nMotorEncoder(left);
+		const int startRight = nMotorEncoder(right);
+		int leftError = 0;
+		int rightError = 0;
+		int rawRight = 0;
+		int rawLeft = 0;
+		float kP = 0.5;
+		float rightLeftRatio = 1.1;//encoder adjustment
+		int count = 0;
+		while (count < 5) {
+			if (absolute(leftError) < 10 && absolute(rightError) < 10) {
+				count++;
+			} else {
+			count = 0;
+		}
+			rawLeft = kP * (target - (startLeft - nMotorEncoder(left)));
+			leftError = max(min(rawLeft, 127), -127);
+			rawRight = kP * (target - (rightLeftRatio * (startRight + nMotorEncoder(right))));
+			rightError = max(min(rawRight, 127), -127);
+			drive(leftError, rightError);
+
+		}
+
+		} else {
+			drive(vexRT[Ch3], vexRT[Ch2]);
+		}
+
+	}
 }
