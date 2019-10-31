@@ -138,6 +138,7 @@ task autonomous()
 		turnTo(-43);
 		pDrive(33);
 		turnTo(12);
+		pDrive(-30);
 
 		wait1Msec(500);
 		wait1Msec(10000);
