@@ -21,9 +21,9 @@ void driveInches(int inches, int sign) {
 	drive(sign*127, .64*sign*127);
 	wait1Msec(milPerInch*inches);
 }
-void driveSlow(int inches, int sign){
+void biasDrive(int inches, int sign, float right, float left) {
 	const float milPerInch = 2000/51;
-	drive(sign*80, (0.60)*sign*80);
+	drive(sign*127*left, .64*sign*127*right);
 	wait1Msec(milPerInch*inches);
 }
 
@@ -84,19 +84,17 @@ task main() {
 		wait1Msec(500);
 		driveInches(6, -1);
 		driveInches(1, 0);
-
 		wait1Msec(500);
-		turnTo(25);
-
+		turnTo(28);
 		wait1Msec(500);
-		driveInches(16, -1);
+		driveInches(28, -1);
+		driveInches(1, 0);
+		wait1Msec(500);
+		turnTo(-45);
+		wait1Msec(500);
+		biasDrive(36, 1, 1, 0.8);
+		driveInches(1, 0);
 		/*
-		driveInches(1, 0);
-		wait1Msec(500);
-		turnTo(-24);
-		wait1Msec(500);
-		driveInches(36, 1);
-		driveInches(1, 0);
 		wait1Msec(500);
 		driveInches(36, -1);
 		driveInches(1, 0);
