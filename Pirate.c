@@ -45,8 +45,8 @@ int absolute(int x) {
 
 void pDrive(int heading){
 	float ENC_PER_INCH = 360. / (4.*3.14);
-	const float kP = 1.5;
-	const int threshold = 10;
+	const float kP = 1.4;
+	const int threshold = 15;
 	int target = ENC_PER_INCH * (heading);
 	int startLeft = nMotorEncoder(left);
 	int startRight = nMotorEncoder(right);
@@ -54,7 +54,7 @@ void pDrive(int heading){
 	int correct = 0;
 	int iter = 0;
 	const int ZERO_VELOCITY = 100;
-	const int MAX_ITER = 50;
+	const int MAX_ITER = 25;
 
 	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
 	while (correct < ZERO_VELOCITY) {
@@ -64,7 +64,7 @@ void pDrive(int heading){
 		errorRight = max(min(kP * errorRight, 127), -127);
 		errorLeft = max(min(kP * errorLeft, 127), -127);
 		drive(errorLeft, errorRight*.65);
-		if (absolute(errorLeft) < threshold+5 && absolute(errorRight) < threshold) {
+		if (absolute(errorLeft) < threshold && absolute(errorRight) < threshold) {
 			correct++;
 		} else {
 			correct = 0;
@@ -139,6 +139,10 @@ task autonomous()
 		pDrive(33);
 		turnTo(12);
 		pDrive(-30);
+		turnTo(45);
+		pDrive(45);
+		turnTo(-40);
+		pDrive(60);
 
 		wait1Msec(500);
 		wait1Msec(10000);
