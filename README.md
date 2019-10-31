@@ -6,7 +6,7 @@ Code for our 2019 Savage Soccer robot. PID, "path following", the works.
 
 ## Calendar
 - Week 1: CAD mechanisms, build chassis, begin PID implementation
+- Week 2: Finish initial prototypes, cut parts, make first auto path
 ### Future:
-- Week 2: Cut parts, begin assembly, finish PID
-- Week 3: Break the robot a bunch, rebuild, re-cut
-- Week 4 (LAST WEEK!): AUTO TIME BABY!!!!!!
+- Week 3: Redesign, assemble robot, test auto
+- Week 4 (LAST WEEK!): Driving practice, reveal video
