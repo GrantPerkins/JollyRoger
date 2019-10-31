@@ -22,17 +22,6 @@ void drive(int l, int r) {
 	motor[leftFollow] = l;
 }
 
-void driveInches(int inches, int sign) {
-	const float milPerInch = 2000/51;
-	drive(sign*127, .64*sign*127);
-	wait1Msec(milPerInch*inches);
-}
-void biasDrive(int inches, int sign, float right, float left) {
-	const float milPerInch = 2000/51;
-	drive(sign*127*left, .64*sign*127*right);
-	wait1Msec(milPerInch*inches);
-}
-
 int max(int a, int b) {
 	if (a>b) {
 		return a;
@@ -54,6 +43,34 @@ int absolute(int x) {
 	return x;
 }
 
+void pDrive(int heading){
+	float ENC_PER_INCH = 360. / (4.*3.14);
+	const float kP = 1.5;
+	const int threshold = 10;
+	int target = ENC_PER_INCH * (heading);
+	int startLeft = nMotorEncoder(left);
+	int startRight = nMotorEncoder(right);
+	float error = 0;
+	int correct = 0;
+	int iter = 0;
+	const int ZERO_VELOCITY = 100;
+	const int MAX_ITER = 50;
+
+	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
+	while (correct < ZERO_VELOCITY) {
+		iter++;
+		int errorRight = target + (startRight - nMotorEncoder(right));
+		int errorLeft = target - (startLeft - nMotorEncoder(left));
+		errorRight = max(min(kP * errorRight, 127), -127);
+		errorLeft = max(min(kP * errorLeft, 127), -127);
+		drive(errorLeft, errorRight*.65);
+		if (absolute(errorLeft) < threshold+5 && absolute(errorRight) < threshold) {
+			correct++;
+		} else {
+			correct = 0;
+		}
+	}
+}
 
 void turnTo(float heading) {
 	const int ENC_PER_ROTATION = 2450;
@@ -65,7 +82,7 @@ void turnTo(float heading) {
 	float error = 0;
 	int correct = 0;
 	int iter = 0;
-	const int ZERO_VELOCITY = 100;
+	const int ZERO_VELOCITY = 50;
 //	const int MAX_ITER = 1000;
 
 	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
@@ -114,28 +131,15 @@ task autonomous()
 
 //const int target = 1000;
 	while (true) {
-		driveInches(53, 1);
-		driveInches(1, 0);
+		pDrive(54);
+		pDrive(-4);
+		turnTo(26);
+		pDrive(-32);
+		turnTo(-43);
+		pDrive(33);
+		turnTo(12);
+
 		wait1Msec(500);
-		driveInches(6, -1);
-		driveInches(1, 0);
-		wait1Msec(500);
-		turnTo(28);
-		wait1Msec(500);
-		driveInches(28, -1);
-		driveInches(1, 0);
-		wait1Msec(500);
-		turnTo(-45);
-		wait1Msec(500);
-		biasDrive(36, 1, 1, 0.8);
-		driveInches(1, 0);
-		/*
-		wait1Msec(500);
-		driveInches(36, -1);
-		driveInches(1, 0);
-		*/
-		wait1Msec(500);
-		driveInches(1,0);
 		wait1Msec(10000);
 	}
 }
