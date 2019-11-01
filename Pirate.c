@@ -50,11 +50,9 @@ void pDrive(int heading){
 	int target = ENC_PER_INCH * (heading);
 	int startLeft = nMotorEncoder(left);
 	int startRight = nMotorEncoder(right);
-	float error = 0;
 	int correct = 0;
 	int iter = 0;
 	const int ZERO_VELOCITY = 100;
-	const int MAX_ITER = 25;
 
 	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
 	while (correct < ZERO_VELOCITY) {
@@ -98,6 +96,48 @@ void turnTo(float heading) {
 		}
 	}
 }
+
+/*
+typedef enum ArmHeights{
+	kUp = 1,
+} ArmHeights;
+*/
+
+enum Direction {
+	kForward,
+	kStop,
+	kBackward,
+	kNone,
+};
+
+Direction getInputDirection() {
+	if (vexRT[Btn8U])
+		return kForward;
+	if (vexRT[Btn8D])
+		return kBackward;
+	if (vexRT[Btn8L])
+		return kStop;
+	return kNone;
+}
+
+task driveForwardWhenPressed() {
+	while ((getInputDirection() == kNone) || (getInputDirection() == kForward)) {
+		drive(127, 127);
+	}
+}
+
+task driveBackwardWhenPressed() {
+	while ((getInputDirection() == kNone) || (getInputDirection() == kBackward)) {
+		drive(-127, -127);
+	}
+}
+
+task stopWhenPressed() {
+	while ((getInputDirection() == kNone) || (getInputDirection() == kStop)) {
+		drive(0, 0);
+	}
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //                          Pre-Autonomous Functions
@@ -116,15 +156,6 @@ void pre_auton()
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                                 Autonomous Task
-//
-// This task is used to control your robot during the autonomous phase of a VEX Competition.
-// You must modify the code to add your own robot specific commands here.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
 
 task autonomous()
 {
@@ -149,28 +180,31 @@ task autonomous()
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                                 User Control Task
-//
-// This task is used to control your robot during the user control phase of a VEX Competition.
-// You must modify the code to add your own robot specific commands here.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
-
 task usercontrol()
 {
 	// User control code here, inside the loop
+	int direction = (int)kNone;
+	int currentDirection;
 
 	while (true)
 	{
-	  // This is the main execution loop for the user control program. Each time through the loop
-	  // your program should update motor + servo values based on feedback from the joysticks.
+		currentDirection = getInputDirection();
+	  if (currentDirection != (int)kNone && currentDirection != direction) {
+	  	direction = currentDirection;
+	  	switch (direction) {
+	  		case kForward:
+	  			startTask(driveForwardWhenPressed);
+	  			break;
+	  		case kBackward:
+	  			startTask(driveBackwardWhenPressed);
+	  			break;
+	  		case kStop:
+	  			startTask(stopWhenPressed);
+	  			break;
+	  		default:
+	  			break;
+	  	}
+	  }
 
-	  // .....................................................................................
-	  // Insert user code here. This is where you use the joystick values to update your motors, etc.
-	  // .....................................................................................
-
-	  UserControlCodePlaceholderForTesting(); // Remove this function call once you have "real" code.
 	}
 }
