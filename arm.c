@@ -16,14 +16,14 @@ void openClaw(){
 	motor[arm] = 30;
 	wait1Msec(100);
 }
-
+/*
 void closeClaw(){
 	int button = SensorValue(limit);
 	while(button!=1){
 		motor[claw] = -30;
 	}
 }
-
+*/
 
 task main()
 {
