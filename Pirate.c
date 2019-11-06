@@ -77,7 +77,7 @@ void pDrive(int heading){//input inches
 		drive(errorLeft, errorRight*.65);
 		if (absolute(errorLeft) < threshold && absolute(errorRight) < threshold) {
 			correct++;
-		} else {
+			} else {
 			correct = 0;
 		}
 	}
@@ -94,7 +94,7 @@ void turnTo(float heading) {
 	int correct = 0;
 	int iter = 0;
 	const int ZERO_VELOCITY = 50;
-//	const int MAX_ITER = 1000;
+	//	const int MAX_ITER = 1000;
 
 	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
 	while (correct < ZERO_VELOCITY) {
@@ -104,7 +104,7 @@ void turnTo(float heading) {
 		drive(error, -error);
 		if (absolute(error) < threshold) {
 			correct++;
-		} else {
+			} else {
 			correct = 0;
 		}
 	}
@@ -112,16 +112,10 @@ void turnTo(float heading) {
 
 void armTo(int input){
 	float kP = 0.5;
+	float kGravP = 0.1;
 	float kBackP = 0.2;
-	const int measureRange = 4095;
-	int startPos1 = SensorValue(pot1);
-	int startPos2 = SensorValue(pot2);
 	int error1 = 0;
 	int error2 = 0;
-	int target0 = 0;
-	int correctIterations = 0;
-	const int threshold = 10;
-	const int goal = 50;
 	int target = 0;
 	int silverTarget = 1000;
 	int goldTarget = 1600;
@@ -130,44 +124,45 @@ void armTo(int input){
 	bool limitSpeed = false;
 	bool silver = false;
 	switch (input){
-		case kSilver:
-			target = silverTarget;
-			silver = true;
-			break;
-		case kGold:
-			target = goldTarget;
-			break;
-		case kBack:
-			target = backTarget;
-			limitSpeed = true;
-			break;
+	case kSilver:
+		target = silverTarget;
+		silver = true;
+		break;
+	case kGold:
+		target = goldTarget;
+		break;
+	case kBack:
+		target = backTarget;
+		limitSpeed = true;
+		break;
 	}
 
-	while(correctIterations < goal ){
-			error1 = target - (SensorValue(pot1));
-			error2 = target - (SensorValue(pot2));
-			float avgError = (error1 + error2)/2.;
-			float speed = avgError*kP * -1.0;
-			if(limitSpeed && avgError <  1200 && avgError > 600 && avgError > 0){
-				speed/=kP;
-				speed *= kBackP
-				speed = max(min(speed, 30), -30);
-			}else if(limitSpeed && avgError < 600 && avgError > 0){
-				speed/=kP;
-				speed *= kBackP * 0.8;
-				speed = max(min(speed, 13), -13);
-			}
-			if(silver && avgError < 300 && avgError > -100){
-				speed = -15;
-			}
-			motor[arm1] = speed;
-			motor[arm2] = speed;
-			if(avgError < threshold){
-				correctIterations++;
-			}else{
-				correctIterations = 0;
-			}
+	error1 = SensorValue(pot1);
+	error2 = SensorValue(pot2);
+	float value = (error1 + error2)/2.0;
+	float avgError = target - value;
+	float gravityError = vertical - value;
+
+	// speed will be relative to effect of gravity and offset from target
+	float speed;
+
+	//flip
+	if (limitSpeed) {
+		if (600 < avgError < 1200) { // first stage slowing
+			speed *= kBackP;
+			speed = max(min(speed, 30), -30);
+		} else if (600 < avgError) { // second stage slowing
+			speed *= kBackP * 0.8;
+			speed = max(min(speed, 13), -13);
+		}
+	} else { // not flipping
+		speed = kP * avgError;
 	}
+
+	speed += kGravP * gravityError;
+
+	motor[arm1] = speed;
+	motor[arm2] = speed;
 }
 
 void openClaw(){
@@ -182,13 +177,6 @@ void closeClaw(){
 		motor[claw] = -60;
 	}
 }
-
-//Multi-threading things
-/*
-typedef enum ArmHeights{
-	kUp = 1,
-} ArmHeights;
-*/
 
 enum Direction {
 	kForward,
@@ -207,24 +195,6 @@ Direction getInputDirection() {
 	return kNone;
 }
 
-task driveForwardWhenPressed() {
-	while ((getInputDirection() == kNone) || (getInputDirection() == kForward)) {
-		drive(127, 127);
-	}
-}
-
-task driveBackwardWhenPressed() {
-	while ((getInputDirection() == kNone) || (getInputDirection() == kBackward)) {
-		drive(-127, -127);
-	}
-}
-
-task stopWhenPressed() {
-	while ((getInputDirection() == kNone) || (getInputDirection() == kStop)) {
-		drive(0, 0);
-	}
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 //                          Pre-Autonomous Functions
@@ -236,9 +206,9 @@ task stopWhenPressed() {
 
 void pre_auton()
 {
-  // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
-  // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
-  bStopTasksBetweenModes = true;
+	// Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
+	// Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
+	bStopTasksBetweenModes = true;
 
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
@@ -247,7 +217,7 @@ void pre_auton()
 task autonomous()
 {
 
-//const int target = 1000;
+	//const int target = 1000;
 	while (true) {
 		/*
 		pDrive(54);//input inches
@@ -273,19 +243,19 @@ task autonomous()
 	}
 }
 task goldArm(){
-	while ((getInputDirection() == kNone) || (getInputDirection() == kGold)) {
+	while (!bIfiRobotDisabled && ((getInputDirection() == kNone) || (getInputDirection() == kGold))) {
 		armTo(kGold);
 	}
 }
 
 task silverArm(){
-	while ((getInputDirection() == kNone) || (getInputDirection() == kSilver)) {
+	while (!bIfiRobotDisabled && ((getInputDirection() == kNone) || (getInputDirection() == kSilver))) {
 		armTo(kSilver);
 	}
 }
 
 task dumpArm(){
-	while ((getInputDirection() == kNone) || (getInputDirection() == kBack)) {
+	while (!bIfiRobotDisabled && ((getInputDirection() == kNone) || (getInputDirection() == kBack))) {
 		armTo(kBack);
 	}
 }
@@ -299,23 +269,23 @@ task usercontrol()
 
 	while (true)
 	{
+		drive(vexRT[Ch3], vexRT[Ch2]);
 		currentDirection = getInputDirection();
-	  if (currentDirection != (int)kNone && currentDirection != direction) {
-	  	direction = currentDirection;
-	  	switch (direction) {
-	  		case kGold:
-	  			startTask(goldArm);
-	  			break;
-	  		case kSilver:
-	  			startTask(silverArm);
-	  			break;
-	  		case kBack:
-	  			startTask(dumpArm);
-	  			break;
-	  		default:
-	  			break;
-	  	}
-	  }
-
+		if (currentDirection != (int)kNone && currentDirection != direction) {
+			direction = currentDirection;
+			switch (direction) {
+			case kGold:
+				startTask(goldArm);
+				break;
+			case kSilver:
+				startTask(silverArm);
+				break;
+			case kBack:
+				startTask(dumpArm);
+				break;
+			default:
+				break;
+			}
+		}
 	}
 }
