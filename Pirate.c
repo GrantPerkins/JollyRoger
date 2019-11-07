@@ -1,6 +1,7 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    pot1,           sensorPotentiometer)
 #pragma config(Sensor, in2,    pot2,           sensorPotentiometer)
+#pragma config(Sensor, dgtl1,  limit,          sensorTouch)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port2,           left,          tmotorVex393HighSpeed_MC29, openLoop, encoderPort, I2C_1)
@@ -168,27 +169,24 @@ void armTo(Position current){
 		} else*/
 		// not flipping
 }
-/*
-void openClaw(){
-	motor[claw] = 50;
-	wait1Msec(100);
-}
 
 void closeClaw(){
-	int button = SensorValue(limit);
-	clearTimer(T1);
-	while(button!=1 && time1[T1] < 800){
-		motor[claw] = -60;
-	}
+	motor[claw] = 30;
 }
-*/
+
+void openClaw() {
+	if (!SensorValue(limit))
+		motor[claw] = -40;
+	else
+		motor[claw] = 0;
+}
 
 Position getInputPosition() {
 	if (vexRT[Btn8U])
 		return kDump;
 	if (vexRT[Btn8D])
 		return kSilver;
-	if (vexRT[Btn8L])
+	if (vexRT[Btn8L] || vexRT[Btn8R])
 		return kGold;
 	return kNone;
 }
@@ -227,28 +225,45 @@ task autonomous()
 	}
 }
 
+enum ClawState {
+	kOpen,
+	kClose
+};
+
+ClawState getClawState() {
+	if (vexRT[Btn6U])
+		return kOpen;
+	if (vexRT[Btn5U])
+		return kClose;
+	return kNone;
+}
 
 task usercontrol() {
-	Position current = kNone;
-	Position input = kNone;
+	Position currentPosition = kNone;
+	Position inputPosition = kNone;
+	ClawState currentClaw = kNone;
+	ClawState inputClaw = kNone;
 	while (true) {
+		//teleop drive
 		drive(vexRT[Ch3], vexRT[Ch2]);
-		input = getInputPosition();
-		switch (input){
-			case kNone:
-				break;
-			default:
-				current = input;
+
+		// teleop 4 bar
+		inputPosition = getInputPosition();
+		if (inputPosition != (int)kNone) {
+				currentPosition = inputPosition;
 		}
-		if (current !=(int)kNone) {
-			armTo(current);
+		if (currentPosition != (int)kNone) {
+			armTo(currentPosition);
 		}
-		if (vexRT[Btn6U]) {
-			motor[claw] = 40;
-		} else if (vexRT[Btn5U]) {
-			motor[claw] = -40;
-		} else {
-		motor[claw] = 0;
-	}
+
+		//teleop claw
+		inputClaw = getClawState();
+		if (inputClaw != (int)kNone) {
+			currentClaw = inputClaw;
+		}
+		if (currentClaw == (int)kOpen)
+			openClaw();
+		else if (currentClaw == (int)kClose)
+			closeClaw();
 	}
 }
