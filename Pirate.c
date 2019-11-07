@@ -23,7 +23,8 @@
 enum ArmTarget{
 	kSilver,
 	kGold,
-	kBack
+	kBack,
+	kNone
 };
 
 //Math Stuff
@@ -111,22 +112,22 @@ void turnTo(float heading) {
 }
 
 void armTo(int input){
-	float kP = 0.5;
+	float kP = 0.4;
 	float kGravP = 0.1;
 	float kBackP = 0.2;
 	int error1 = 0;
 	int error2 = 0;
 	int target = 0;
-	int silverTarget = 1000;
-	int goldTarget = 1600;
-	int backTarget = 3300;
-	int vertical = 2600;
+	int silverTarget = 200;
+	int goldTarget = 800;
+	int backTarget = 1100;
+	int vertical = 2000;
 	bool limitSpeed = false;
-	bool silver = false;
+	int correctIterations = 0;
+	int goal = 50;
 	switch (input){
 	case kSilver:
 		target = silverTarget;
-		silver = true;
 		break;
 	case kGold:
 		target = goldTarget;
@@ -136,33 +137,47 @@ void armTo(int input){
 		limitSpeed = true;
 		break;
 	}
+	while(correctIterations < goal){
 
-	error1 = SensorValue(pot1);
-	error2 = SensorValue(pot2);
-	float value = (error1 + error2)/2.0;
-	float avgError = target - value;
-	float gravityError = vertical - value;
+		error1 = SensorValue(pot1);
+		error2 = SensorValue(pot2);
+		float value = (error1 + error2)/2.0;
+		float avgError = target - value;
+		float gravityError = vertical - value;
 
-	// speed will be relative to effect of gravity and offset from target
-	float speed;
+		// speed will be relative to effect of gravity and offset from target
+		float speed;
 
-	//flip
-	if (limitSpeed) {
-		if (600 < avgError < 1200) { // first stage slowing
-			speed *= kBackP;
-			speed = max(min(speed, 30), -30);
-		} else if (600 < avgError) { // second stage slowing
-			speed *= kBackP * 0.8;
-			speed = max(min(speed, 13), -13);
+		//flip
+		/*
+		if (limitSpeed) {
+			if (600 < avgError < 1200) { // first stage slowing
+				speed *= kBackP;
+				speed = max(min(speed, 30), -30);
+			} else if (600 < avgError) { // second stage slowing
+				speed *= kBackP * 0.8;
+				speed = max(min(speed, 13), -13);
+			}else{
+				speed = kP * avgError;
+			}
+		} else*/
+		// not flipping
+
+			speed = kP * avgError;
+
+
+		//speed += kGravP * gravityError;
+
+		motor[arm1] = speed;
+		motor[arm2] = speed;
+		if(abs(avgError) < 100 ){
+			correctIterations++;
+		}else{
+			correctIterations = 0;
+
 		}
-	} else { // not flipping
-		speed = kP * avgError;
+
 	}
-
-	speed += kGravP * gravityError;
-
-	motor[arm1] = speed;
-	motor[arm2] = speed;
 }
 
 void openClaw(){
@@ -178,14 +193,9 @@ void closeClaw(){
 	}
 }
 
-enum Direction {
-	kForward,
-	kStop,
-	kBackward,
-	kNone,
-};
 
-Direction getInputDirection() {
+
+ArmTarget getInputDirection() {
 	if (vexRT[Btn8U])
 		return kBack;
 	if (vexRT[Btn8D])
@@ -243,21 +253,27 @@ task autonomous()
 	}
 }
 task goldArm(){
-	while (!bIfiRobotDisabled && ((getInputDirection() == kNone) || (getInputDirection() == kGold))) {
+	while (((getInputDirection() == kNone) || (getInputDirection() == kGold))) {
 		armTo(kGold);
 	}
+	motor[arm1] = 0;
+	motor[arm2] = 0;
 }
 
 task silverArm(){
-	while (!bIfiRobotDisabled && ((getInputDirection() == kNone) || (getInputDirection() == kSilver))) {
+	while (((getInputDirection() == kNone) || (getInputDirection() == kSilver))) {
 		armTo(kSilver);
 	}
+	motor[arm1] = 0;
+	motor[arm2] = 0;
 }
 
 task dumpArm(){
-	while (!bIfiRobotDisabled && ((getInputDirection() == kNone) || (getInputDirection() == kBack))) {
+	while ( ((getInputDirection() == kNone) || (getInputDirection() == kBack))) {
 		armTo(kBack);
 	}
+	motor[arm1] = 0;
+	motor[arm2] = 0;
 }
 
 
@@ -269,7 +285,6 @@ task usercontrol()
 
 	while (true)
 	{
-		drive(vexRT[Ch3], vexRT[Ch2]);
 		currentDirection = getInputDirection();
 		if (currentDirection != (int)kNone && currentDirection != direction) {
 			direction = currentDirection;
