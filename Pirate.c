@@ -1,13 +1,12 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    pot1,           sensorPotentiometer)
 #pragma config(Sensor, in2,    pot2,           sensorPotentiometer)
-#pragma config(Sensor, dgtl1,  limit,          sensorTouch)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign )
-#pragma config(Motor,  port2,           left,          tmotorVex393HighSpeed_MC29, openLoop, reversed, encoderPort, I2C_1)
-#pragma config(Motor,  port3,           leftFollow,    tmotorVex393_MC29, openLoop, reversed)
-#pragma config(Motor,  port4,           right,         tmotorVex393HighSpeed_MC29, openLoop, reversed, encoderPort, I2C_2)
-#pragma config(Motor,  port5,           rightFollow,   tmotorVex393_MC29, openLoop, reversed)
+#pragma config(Motor,  port2,           left,          tmotorVex393HighSpeed_MC29, openLoop, encoderPort, I2C_1)
+#pragma config(Motor,  port3,           leftFollow,    tmotorVex393_MC29, openLoop)
+#pragma config(Motor,  port4,           right,         tmotorVex393HighSpeed_MC29, openLoop, encoderPort, I2C_2)
+#pragma config(Motor,  port5,           rightFollow,   tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port6,           arm1,          tmotorVex393_MC29, openLoop)
 #pragma config(Motor,  port7,           arm2,          tmotorVex393_MC29, openLoop, reversed)
 #pragma config(Motor,  port8,           claw,          tmotorVex393_MC29, openLoop)
@@ -20,10 +19,10 @@
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 
-enum ArmTarget{
+enum Position{
 	kSilver,
 	kGold,
-	kBack,
+	kDump,
 	kNone
 };
 
@@ -95,7 +94,6 @@ void turnTo(float heading) {
 	int correct = 0;
 	int iter = 0;
 	const int ZERO_VELOCITY = 50;
-	//	const int MAX_ITER = 1000;
 
 	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
 	while (correct < ZERO_VELOCITY) {
@@ -111,75 +109,66 @@ void turnTo(float heading) {
 	}
 }
 
-void armTo(int input){
+void armTo(Position current){
 	float kP = 0.4;
 	float kGravP = 0.1;
-	float kBackP = 0.2;
-	int error1 = 0;
-	int error2 = 0;
+	float kDumpP = 0.2;
+	float error1 = 0;
+	float error2 = 0;
 	int target = 0;
-	int silverTarget = 200;
-	int goldTarget = 800;
-	int backTarget = 1100;
+	int silverTarget = 0;
+	int goldTarget = 700;
+	int backTarget = 2000;
 	int vertical = 2000;
 	bool limitSpeed = false;
-	int correctIterations = 0;
-	int goal = 50;
-	switch (input){
-	case kSilver:
-		target = silverTarget;
-		break;
-	case kGold:
-		target = goldTarget;
-		break;
-	case kBack:
-		target = backTarget;
-		limitSpeed = true;
-		break;
-	}
-	while(correctIterations < goal){
+	float value;
+	float avgError;
+	float speed = 0;
 
+
+		switch (current){
+			case kSilver:
+				target = silverTarget;
+				break;
+			case kGold:
+				target = goldTarget;
+				break;
+			case kDump:
+				target = backTarget;
+				limitSpeed = true;
+				break;
+			default:
+				break;
+		}
 		error1 = SensorValue(pot1);
 		error2 = SensorValue(pot2);
-		float value = (error1 + error2)/2.0;
-		float avgError = target - value;
-		float gravityError = vertical - value;
+		value = (error1 + error2)/2.0;
+		avgError = target - value;
 
 		// speed will be relative to effect of gravity and offset from target
-		float speed;
-
-		//flip
-		/*
-		if (limitSpeed) {
-			if (600 < avgError < 1200) { // first stage slowing
-				speed *= kBackP;
-				speed = max(min(speed, 30), -30);
-			} else if (600 < avgError) { // second stage slowing
-				speed *= kBackP * 0.8;
-				speed = max(min(speed, 13), -13);
-			}else{
-				speed = kP * avgError;
-			}
-		} else*/
-		// not flipping
-
-			speed = kP * avgError;
+		speed = kP * avgError;
 
 
 		//speed += kGravP * gravityError;
 
 		motor[arm1] = speed;
 		motor[arm2] = speed;
-		if(abs(avgError) < 100 ){
-			correctIterations++;
-		}else{
-			correctIterations = 0;
-
-		}
-
-	}
+		//flip
+		/*
+		if (limitSpeed) {
+			if (600 < avgError < 1200) { // first stage slowing
+				speed *= kDumpP;
+				speed = max(min(speed, 30), -30);
+			} else if (600 < avgError) { // second stage slowing
+				speed *= kDumpP * 0.8;
+				speed = max(min(speed, 13), -13);
+			}else{
+				speed = kP * avgError;
+			}
+		} else*/
+		// not flipping
 }
-
+/*
 void openClaw(){
 	motor[claw] = 50;
 	wait1Msec(100);
@@ -192,12 +181,11 @@ void closeClaw(){
 		motor[claw] = -60;
 	}
 }
+*/
 
-
-
-ArmTarget getInputDirection() {
+Position getInputPosition() {
 	if (vexRT[Btn8U])
-		return kBack;
+		return kDump;
 	if (vexRT[Btn8D])
 		return kSilver;
 	if (vexRT[Btn8L])
@@ -205,23 +193,9 @@ ArmTarget getInputDirection() {
 	return kNone;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-//                          Pre-Autonomous Functions
-//
-// You may want to perform some actions before the competition starts. Do them in the
-// following function.
-//
-/////////////////////////////////////////////////////////////////////////////////////////
-
 void pre_auton()
 {
-	// Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
-	// Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
 	bStopTasksBetweenModes = true;
-
-	// All activities that occur before the competition starts
-	// Example: clearing encoders, setting servo positions, ...
 }
 
 task autonomous()
@@ -252,55 +226,29 @@ task autonomous()
 
 	}
 }
-task goldArm(){
-	while (((getInputDirection() == kNone) || (getInputDirection() == kGold))) {
-		armTo(kGold);
-	}
-	motor[arm1] = 0;
-	motor[arm2] = 0;
-}
-
-task silverArm(){
-	while (((getInputDirection() == kNone) || (getInputDirection() == kSilver))) {
-		armTo(kSilver);
-	}
-	motor[arm1] = 0;
-	motor[arm2] = 0;
-}
-
-task dumpArm(){
-	while ( ((getInputDirection() == kNone) || (getInputDirection() == kBack))) {
-		armTo(kBack);
-	}
-	motor[arm1] = 0;
-	motor[arm2] = 0;
-}
 
 
-task usercontrol()
-{
-	// User control code here, inside the loop
-	int direction = (int)kNone;
-	int currentDirection;
-
-	while (true)
-	{
-		currentDirection = getInputDirection();
-		if (currentDirection != (int)kNone && currentDirection != direction) {
-			direction = currentDirection;
-			switch (direction) {
-			case kGold:
-				startTask(goldArm);
-				break;
-			case kSilver:
-				startTask(silverArm);
-				break;
-			case kBack:
-				startTask(dumpArm);
+task usercontrol() {
+	Position current = kNone;
+	Position input = kNone;
+	while (true) {
+		drive(vexRT[Ch3], vexRT[Ch2]);
+		input = getInputPosition();
+		switch (input){
+			case kNone:
 				break;
 			default:
-				break;
-			}
+				current = input;
 		}
+		if (current !=(int)kNone) {
+			armTo(current);
+		}
+		if (vexRT[Btn6U]) {
+			motor[claw] = 40;
+		} else if (vexRT[Btn5U]) {
+			motor[claw] = -40;
+		} else {
+		motor[claw] = 0;
+	}
 	}
 }
