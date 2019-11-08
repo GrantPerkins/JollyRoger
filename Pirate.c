@@ -20,6 +20,14 @@
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 
+float getLeftEnc() {
+	return ((float)nMotorEncoder(left)/-2800.0)*99.0;
+}
+
+float getRightEnc() {
+	return ((float)nMotorEncoder(right)/2800.0)*99.0;
+}
+
 enum Position{
 	kSilver,
 	kGold,
@@ -57,31 +65,12 @@ void drive(int l, int r) {
 	motor[leftFollow] = l;
 }
 
-void pDrive(int heading){//input inches
-	float ENC_PER_INCH = 360. / (4.*3.14);
-	const float kP = 1.4;
-	const int threshold = 15;
-	int target = ENC_PER_INCH * (heading);
-	int startLeft = nMotorEncoder(left);
-	int startRight = nMotorEncoder(right);
-	int correct = 0;
-	int iter = 0;
-	const int ZERO_VELOCITY = 100;
-
-	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
-	while (correct < ZERO_VELOCITY) {
-		iter++;
-		int errorRight = target + (startRight - nMotorEncoder(right));
-		int errorLeft = target - (startLeft - nMotorEncoder(left));
-		errorRight = max(min(kP * errorRight, 127), -127);
-		errorLeft = max(min(kP * errorLeft, 127), -127);
-		drive(errorLeft, errorRight*.65);
-		if (absolute(errorLeft) < threshold && absolute(errorRight) < threshold) {
-			correct++;
-			} else {
-			correct = 0;
-		}
-	}
+int pDrive(int inches, float initLeft, float initRight) {
+	const int kP = 5.0;
+	float leftError = inches - (getLeftEnc() - initLeft);
+	float rightError = inches - (getRightEnc() - initRight);
+	drive(kP * leftError, kP * rightError);
+	return (leftError + rightError) / 2.0;
 }
 
 void turnTo(float heading) {
@@ -149,24 +138,9 @@ void armTo(Position current){
 		// speed will be relative to effect of gravity and offset from target
 		speed = kP * avgError;
 
-
-		//speed += kGravP * gravityError;
-
 		motor[arm1] = speed;
 		motor[arm2] = speed;
 		//flip
-		/*
-		if (limitSpeed) {
-			if (600 < avgError < 1200) { // first stage slowing
-				speed *= kDumpP;
-				speed = max(min(speed, 30), -30);
-			} else if (600 < avgError) { // second stage slowing
-				speed *= kDumpP * 0.8;
-				speed = max(min(speed, 13), -13);
-			}else{
-				speed = kP * avgError;
-			}
-		} else*/
 		// not flipping
 }
 
@@ -191,6 +165,19 @@ Position getInputPosition() {
 	return kNone;
 }
 
+enum ClawState {
+	kOpen,
+	kClose
+};
+
+ClawState getClawState() {
+	if (vexRT[Btn6U])
+		return kOpen;
+	if (vexRT[Btn5U])
+		return kClose;
+	return kNone;
+}
+
 void pre_auton()
 {
 	bStopTasksBetweenModes = true;
@@ -202,6 +189,20 @@ task autonomous()
 	//const int target = 1000;
 	while (true) {
 		/*
+
+		float error = 36;
+		float initLeft = getLeftEnc();
+		float initRight = getRightEnc();
+		int correct = 0;
+		while (correct < 50) {
+			if (absolute(error) < .5)
+				correct++;
+			else
+				correct = 0;
+			error = pDrive(36, initLeft, initRight);
+		}
+		wait1Msec(10000);
+
 		pDrive(54);//input inches
 		pDrive(-4);//input degrees
 		turnTo(26);
@@ -218,25 +219,10 @@ task autonomous()
 		wait1Msec(500);
 		wait1Msec(10000);
 		*/
-
-		armTo(kSilver);
-
-
 	}
 }
 
-enum ClawState {
-	kOpen,
-	kClose
-};
 
-ClawState getClawState() {
-	if (vexRT[Btn6U])
-		return kOpen;
-	if (vexRT[Btn5U])
-		return kClose;
-	return kNone;
-}
 
 task usercontrol() {
 	Position currentPosition = kNone;
