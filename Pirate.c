@@ -69,47 +69,31 @@ int pDrive(int inches, float initLeft, float initRight) {
 	const int kP = 5.0;
 	float leftError = inches - (getLeftEnc() - initLeft);
 	float rightError = inches - (getRightEnc() - initRight);
-	drive(kP * leftError, kP * rightError);
+	drive(min(107,max(-107, kP * leftError)), kP * rightError);
 	return (leftError + rightError) / 2.0;
 }
 
-void turnTo(float heading) {
-	const int ENC_PER_ROTATION = 2450;
-	const float kP = 1.5;
-	const int threshold = 5;
-	int target = ENC_PER_ROTATION * (heading / 360);
-	int startLeft = nMotorEncoder(left);
-	int startRight = nMotorEncoder(right);
-	float error = 0;
-	int correct = 0;
-	int iter = 0;
-	const int ZERO_VELOCITY = 50;
+float degreesToUnits(float degrees) {
+	const float inchesPerTurn = 83.0;
+	return (degrees / 360.0) * inchesPerTurn;
+}
 
-	// the 'while' is here to ensure velocity = 0, so we don't drift too far.
-	while (correct < ZERO_VELOCITY) {
-		iter++;
-		error = target - (startRight - nMotorEncoder(right)) - (startLeft - nMotorEncoder(left));
-		error = max(min(kP * error, 64), -64);
-		drive(error, -error);
-		if (absolute(error) < threshold) {
-			correct++;
-			} else {
-			correct = 0;
-		}
-	}
+float turnTo(float target, float initLeft, float initRight) {
+	int kP = 22.5;
+	target = degreesToUnits(target);
+	float error = kP * (target - ((getLeftEnc() - initLeft) - (getRightEnc() - initRight)));
+	drive(error, -error);
+	return error;
 }
 
 void armTo(Position current){
 	float kP = 0.4;
-	float kGravP = 0.1;
-	float kDumpP = 0.2;
 	float error1 = 0;
 	float error2 = 0;
 	int target = 0;
 	int silverTarget = 0;
 	int goldTarget = 700;
 	int backTarget = 2000;
-	int vertical = 2000;
 	bool limitSpeed = false;
 	float value;
 	float avgError;
@@ -140,8 +124,6 @@ void armTo(Position current){
 
 		motor[arm1] = speed;
 		motor[arm2] = speed;
-		//flip
-		// not flipping
 }
 
 void closeClaw(){
@@ -183,43 +165,161 @@ void pre_auton()
 	bStopTasksBetweenModes = true;
 }
 
+/*
+
+Auto template
+
+	// TURNING
+	target = REPLACE_ME;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	int correct = 0;
+	while (correct < 50) {
+		error = turnTo(90.0, initLeft, initRight);
+		if (absolute(error) < 5)
+			correct++;
+		else
+			correct = 0;
+	}
+
+
+	// DRIVING
+	target = REPLACE_ME;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+	}
+
+*/
+
 task autonomous()
 {
+	float target;
+	float initLeft = getLeftEnc();
+	float initRight = getRightEnc();
+	int correct = 0;
+	float error;
 
-	//const int target = 1000;
-	while (true) {
-		/*
-
-		float error = 36;
-		float initLeft = getLeftEnc();
-		float initRight = getRightEnc();
-		int correct = 0;
-		while (correct < 50) {
-			if (absolute(error) < .5)
-				correct++;
-			else
-				correct = 0;
-			error = pDrive(36, initLeft, initRight);
-		}
-		wait1Msec(10000);
-
-		pDrive(54);//input inches
-		pDrive(-4);//input degrees
-		turnTo(26);
-		pDrive(-32);
-		turnTo(-43);
-		pDrive(33);
-		turnTo(12);
-		pDrive(-30);
-		turnTo(45);
-		pDrive(45);
-		turnTo(-40);
-		pDrive(60);
-
-		wait1Msec(500);
-		wait1Msec(10000);
-		*/
+	// Drive 66, open claw, raise arm
+	target = 62.0;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+		armTo(kGold);
+		openClaw();
 	}
+
+	// Close claw
+	drive(0,0);
+	closeClaw();
+	wait1Msec(500);
+
+	// Drive -4
+	target = -10.0;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+		armTo(kGold);
+		closeClaw();
+	}
+	/*
+	// Turn 26
+	// Drive -32
+	target = REPLACE_ME;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+	}
+
+	// Turn -43
+	// Drive 33
+	target = REPLACE_ME;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+	}
+
+	// Turn 12
+	// Drive -30
+	target = REPLACE_ME;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+	}
+
+	// Turn 45
+	// Drive 45
+	target = REPLACE_ME;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+	}
+
+	// Turn -40
+	// Drive 60
+	target = REPLACE_ME;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+	}
+	*/
 }
 
 
