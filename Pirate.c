@@ -174,9 +174,9 @@ Auto template
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
-	int correct = 0;
+	correct = 0;
 	while (correct < 50) {
-		error = turnTo(90.0, initLeft, initRight);
+		error = turnTo(target, initLeft, initRight);
 		if (absolute(error) < 5)
 			correct++;
 		else
@@ -209,7 +209,7 @@ task autonomous()
 	float error;
 
 	// Drive 66, open claw, raise arm
-	target = 62.0;
+	target = 58.0;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -230,7 +230,7 @@ task autonomous()
 	wait1Msec(500);
 
 	// Drive -4
-	target = -10.0;
+	target = -15.0;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -244,10 +244,24 @@ task autonomous()
 		armTo(kGold);
 		closeClaw();
 	}
-	/*
-	// Turn 26
+
+	// Turn 30
+	target = 30;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = turnTo(target, initLeft, initRight);
+		if (absolute(error) < 5)
+			correct++;
+		else
+			correct = 0;
+		armTo(kGold);
+	}
+
 	// Drive -32
-	target = REPLACE_ME;
+	target = -30;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -258,9 +272,37 @@ task autonomous()
 			correct++;
 		else
 			correct = 0;
+		armTo(kGold);
+		closeClaw();
 	}
 
+	// Arm dump
+	clearTimer(T1);
+	while (time1[T1] < 1000) {
+		armTo(kDump);
+		closeClaw();
+	}
+	openClaw();
+	wait1Msec(500);
+
+
+
 	// Turn -43
+	target = 30;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = turnTo(target, initLeft, initRight);
+		if (absolute(error) < 5)
+			correct++;
+		else
+			correct = 0;
+		armTo(kGold);
+	}
+	/*
+
 	// Drive 33
 	target = REPLACE_ME;
 	error = 100;
