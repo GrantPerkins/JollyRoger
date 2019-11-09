@@ -7,6 +7,6 @@ Code for our 2019 Savage Soccer robot. PID, "path following", the works.
 ## Calendar
 - Week 1: CAD mechanisms, build chassis, begin PID implementation
 - Week 2: Finish initial prototypes, cut parts, make first auto path
-- Week 3: Finish teleop code. V4 of 4bar works. V8 of chassis works. V2 of claw kinda does. V3 coming soon.
+- Week 3: Finish teleop code. V4 of 4bar works. V8 of chassis works. V3 claw doesn't open wide enough.
 ### Future:
-- Week 4 (LAST WEEK!): Tune auto, more autos, driving practice, reveal video
+- Week 4 (LAST WEEK!): Claw V4, tune auto, more autos, driving practice, reveal video
