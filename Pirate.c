@@ -21,11 +21,11 @@
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 
 float getLeftEnc() {
-	return ((float)nMotorEncoder(left)/-2800.0)*99.0;
+	return ((float)nMotorEncoder(left) / -2800.0) * 99.0;
 }
 
 float getRightEnc() {
-	return ((float)nMotorEncoder(right)/2800.0)*99.0;
+	return ((float)nMotorEncoder(right) / 2800.0) * 99.0;
 }
 
 enum Position{
@@ -37,14 +37,14 @@ enum Position{
 
 //Math Stuff
 int max(int a, int b) {
-	if (a>b) {
+	if (a > b) {
 		return a;
 	}
 	return b;
 }
 
 int min(int a, int b) {
-	if (a<b) {
+	if (a < b) {
 		return a;
 	}
 	return b;
@@ -94,36 +94,34 @@ void armTo(Position current){
 	int silverTarget = 0;
 	int goldTarget = 700;
 	int backTarget = 2000;
-	bool limitSpeed = false;
 	float value;
 	float avgError;
 	float speed = 0;
 
+	switch (current){
+		case kSilver:
+			target = silverTarget;
+			break;
+		case kGold:
+			target = goldTarget;
+				break;
+		case kDump:
+			target = backTarget;
+			break;
+		default:
+			break;
+	}
 
-		switch (current){
-			case kSilver:
-				target = silverTarget;
-				break;
-			case kGold:
-				target = goldTarget;
-				break;
-			case kDump:
-				target = backTarget;
-				limitSpeed = true;
-				break;
-			default:
-				break;
-		}
-		error1 = SensorValue(pot1);
-		error2 = SensorValue(pot2);
-		value = (error1 + error2)/2.0;
-		avgError = target - value;
+	error1 = SensorValue(pot1);
+	error2 = SensorValue(pot2);
+	value = (error1 + error2)/2.0;
+	avgError = target - value;
 
-		// speed will be relative to effect of gravity and offset from target
-		speed = kP * avgError;
+	// speed will be relative to effect of gravity and offset from target
+	speed = kP * avgError;
 
-		motor[arm1] = speed;
-		motor[arm2] = speed;
+	motor[arm1] = speed;
+	motor[arm2] = speed;
 }
 
 void closeClaw(){
@@ -285,10 +283,13 @@ task autonomous()
 	openClaw();
 	wait1Msec(500);
 
-
+	clearTimer(T1);
+	while (time1[T1] < 1000) {
+		armTo(kGold);
+	}
 
 	// Turn -43
-	target = 30;
+	target = -30;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
