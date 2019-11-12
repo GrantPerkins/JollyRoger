@@ -91,7 +91,7 @@ void armTo(Position current){
 	float error1 = 0;
 	float error2 = 0;
 	int target = 0;
-	int silverTarget = 0;
+	int silverTarget = 20;
 	int goldTarget = 625;
 	int backTarget = 2000;
 	float value;
