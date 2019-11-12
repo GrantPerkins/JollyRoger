@@ -92,7 +92,7 @@ void armTo(Position current){
 	float error2 = 0;
 	int target = 0;
 	int silverTarget = 0;
-	int goldTarget = 700;
+	int goldTarget = 625;
 	int backTarget = 2000;
 	float value;
 	float avgError;
@@ -125,7 +125,7 @@ void armTo(Position current){
 }
 
 void closeClaw(){
-	motor[claw] = 30;
+	motor[claw] = 40;
 }
 
 void openClaw() {
@@ -206,8 +206,8 @@ task autonomous()
 	int correct = 0;
 	float error;
 
-	// Drive 66, open claw, raise arm
-	target = 58.0;
+	// Drive 52, open claw, raise arm
+	target = 52.0;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -228,7 +228,7 @@ task autonomous()
 	wait1Msec(500);
 
 	// Drive -4
-	target = -15.0;
+	target = -17.0;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -243,8 +243,8 @@ task autonomous()
 		closeClaw();
 	}
 
-	// Turn 30
-	target = 30;
+	// Turn 35
+	target = 35;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -256,10 +256,11 @@ task autonomous()
 		else
 			correct = 0;
 		armTo(kGold);
+		closeClaw();
 	}
 
-	// Drive -32
-	target = -30;
+	// Drive -22
+	target = -22;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -274,9 +275,25 @@ task autonomous()
 		closeClaw();
 	}
 
+	// Turn -35
+	target = -35;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = turnTo(target, initLeft, initRight);
+		if (absolute(error) < 5)
+			correct++;
+		else
+			correct = 0;
+		armTo(kGold);
+		openClaw();
+	}
+
 	// Arm dump
 	clearTimer(T1);
-	while (time1[T1] < 1000) {
+	while (time1[T1] < 1500) {
 		armTo(kDump);
 		closeClaw();
 	}
@@ -288,24 +305,8 @@ task autonomous()
 		armTo(kGold);
 	}
 
-	// Turn -43
-	target = -30;
-	error = 100;
-	initLeft = getLeftEnc();
-	initRight = getRightEnc();
-	correct = 0;
-	while (correct < 50) {
-		error = turnTo(target, initLeft, initRight);
-		if (absolute(error) < 5)
-			correct++;
-		else
-			correct = 0;
-		armTo(kGold);
-	}
-	/*
-
 	// Drive 33
-	target = REPLACE_ME;
+	target = 35;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -316,8 +317,10 @@ task autonomous()
 			correct++;
 		else
 			correct = 0;
+		armTo(kGold);
+		openClaw();
 	}
-
+	/*
 	// Turn 12
 	// Drive -30
 	target = REPLACE_ME;
