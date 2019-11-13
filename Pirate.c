@@ -92,7 +92,7 @@ void armTo(Position current){
 	float error2 = 0;
 	int target = 0;
 	int silverTarget = 20;
-	int goldTarget = 625;
+	int goldTarget = 622;
 	int backTarget = 2000;
 	float value;
 	float avgError;
