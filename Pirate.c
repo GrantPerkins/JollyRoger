@@ -69,7 +69,7 @@ int pDrive(int inches, float initLeft, float initRight) {
 	const int kP = 5.0;
 	float leftError = inches - (getLeftEnc() - initLeft);
 	float rightError = inches - (getRightEnc() - initRight);
-	drive(min(107,max(-107, kP * leftError)), kP * rightError);
+	drive(max(-107, min(107, kP * leftError)), kP * rightError);
 	return (leftError + rightError) / 2.0;
 }
 
@@ -207,7 +207,7 @@ task autonomous()
 	float error;
 
 	// Drive 52, open claw, raise arm
-	target = 52.0;
+	target = 55.0;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -240,11 +240,11 @@ task autonomous()
 		else
 			correct = 0;
 		armTo(kGold);
-		closeClaw();
+		//closeClaw();
 	}
 
 	// Turn 35
-	target = 35;
+	target = 50;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -276,7 +276,7 @@ task autonomous()
 	}
 
 	// Turn -35
-	target = -35;
+	target = -45;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -288,7 +288,6 @@ task autonomous()
 		else
 			correct = 0;
 		armTo(kGold);
-		openClaw();
 	}
 
 	// Arm dump
