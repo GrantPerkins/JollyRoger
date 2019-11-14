@@ -207,12 +207,13 @@ task autonomous()
 	float error;
 
 	// Drive 52, open claw, raise arm
-	target = 55.0;
+	target = 57.0;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
 	correct = 0;
-	while (correct < 50) {
+	clearTimer(T1);
+	while (correct < 50 && time1[T1]< 2000) {
 		error = pDrive(target, initLeft, initRight);
 		if (absolute(error) < .5)
 			correct++;
@@ -228,28 +229,30 @@ task autonomous()
 	wait1Msec(500);
 
 	// Drive -4
-	target = -17.0;
+	target = -20.0;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
 	correct = 0;
-	while (correct < 50) {
+	clearTimer(T1);
+	while (correct < 50 && time1[T1] < 1000) {
 		error = pDrive(target, initLeft, initRight);
 		if (absolute(error) < .5)
 			correct++;
 		else
 			correct = 0;
 		armTo(kGold);
-		//closeClaw();
+		closeClaw();
 	}
 
 	// Turn 35
-	target = 50;
+	target = 55;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
 	correct = 0;
-	while (correct < 50) {
+	clearTimer(T1);
+	while (correct < 50 && time1[T1] < 1000) {
 		error = turnTo(target, initLeft, initRight);
 		if (absolute(error) < 5)
 			correct++;
@@ -260,12 +263,13 @@ task autonomous()
 	}
 
 	// Drive -22
-	target = -22;
+	target = -19;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
 	correct = 0;
-	while (correct < 50) {
+	clearTimer(T1);
+	while (correct < 50 && time1[T1] < 2000) {
 		error = pDrive(target, initLeft, initRight);
 		if (absolute(error) < .5)
 			correct++;
@@ -276,18 +280,88 @@ task autonomous()
 	}
 
 	// Turn -35
-	target = -45;
+	target = -50;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
 	correct = 0;
-	while (correct < 50) {
-		error = turnTo(target, initLeft, initRight);
+	clearTimer(T1);
+	while (correct < 50 && time1[T1] < 1000) {
+		error = turnTo(target, initLeft,  initRight);
 		if (absolute(error) < 5)
 			correct++;
 		else
 			correct = 0;
 		armTo(kGold);
+	}
+
+
+
+	// Arm dump
+	clearTimer(T1);
+	while (time1[T1] < 1500) {
+		armTo(kDump);
+		closeClaw();
+	}
+	openClaw();
+	wait1Msec(500);
+
+	clearTimer(T1);
+	while (time1[T1] < 1000) {
+		armTo(kGold);
+	}
+
+	// Drive -6
+	target = -20.0;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	clearTimer(T1);
+	while (correct < 50 && time1[T1] < 1000) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct += 0;
+		armTo(kGold);
+		closeClaw();
+	}
+
+	// Drive 33
+	target = 42;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	clearTimer(T1);
+	while (correct < 50 && time1[T1] < 2000) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
+		armTo(kGold);
+		openClaw();
+	}
+
+	// Close claw
+	drive(0,0);
+	closeClaw();
+	wait1Msec(500);
+
+	// Drive -30
+	target = -34;
+	error = 100;
+	initLeft = getLeftEnc();
+	initRight = getRightEnc();
+	correct = 0;
+	while (correct < 50) {
+		error = pDrive(target, initLeft, initRight);
+		if (absolute(error) < .5)
+			correct++;
+		else
+			correct = 0;
 	}
 
 	// Arm dump
@@ -304,36 +378,7 @@ task autonomous()
 		armTo(kGold);
 	}
 
-	// Drive 33
-	target = 35;
-	error = 100;
-	initLeft = getLeftEnc();
-	initRight = getRightEnc();
-	correct = 0;
-	while (correct < 50) {
-		error = pDrive(target, initLeft, initRight);
-		if (absolute(error) < .5)
-			correct++;
-		else
-			correct = 0;
-		armTo(kGold);
-		openClaw();
-	}
 	/*
-	// Turn 12
-	// Drive -30
-	target = REPLACE_ME;
-	error = 100;
-	initLeft = getLeftEnc();
-	initRight = getRightEnc();
-	correct = 0;
-	while (correct < 50) {
-		error = pDrive(target, initLeft, initRight);
-		if (absolute(error) < .5)
-			correct++;
-		else
-			correct = 0;
-	}
 
 	// Turn 45
 	// Drive 45
