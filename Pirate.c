@@ -161,6 +161,10 @@ ClawState getClawState() {
 void pre_auton()
 {
 	bStopTasksBetweenModes = true;
+	motor[arm1] = 0;
+	motor[arm2] = 0;
+	motor[claw] = 0;
+	drive(0, 0);
 }
 
 /*
