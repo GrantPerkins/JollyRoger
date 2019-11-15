@@ -20,19 +20,16 @@
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
 
-float getLeftEnc() {
-	return ((float)nMotorEncoder(left) / -2800.0) * 99.0;
-}
-
-float getRightEnc() {
-	return ((float)nMotorEncoder(right) / 2800.0) * 99.0;
-}
-
 enum Position{
 	kSilver,
 	kGold,
 	kDump,
 	kNone
+};
+
+enum ClawState {
+	kOpen,
+	kClose
 };
 
 //Math Stuff
@@ -64,6 +61,15 @@ void drive(int l, int r) {
 	motor[left] = l;
 	motor[leftFollow] = l;
 }
+
+float getLeftEnc() {
+	return ((float)nMotorEncoder(left) / -2800.0) * 99.0;
+}
+
+float getRightEnc() {
+	return ((float)nMotorEncoder(right) / 2800.0) * 99.0;
+}
+
 
 int pDrive(int inches, float initLeft, float initRight) {
 	const int kP = 5.0;
@@ -144,11 +150,6 @@ Position getInputPosition() {
 		return kGold;
 	return kNone;
 }
-
-enum ClawState {
-	kOpen,
-	kClose
-};
 
 ClawState getClawState() {
 	if (vexRT[Btn6U])
