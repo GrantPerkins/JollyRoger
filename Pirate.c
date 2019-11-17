@@ -268,7 +268,7 @@ task autonomous()
 	}
 
 	// Drive -22
-	target = -22;
+	target = -19;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
