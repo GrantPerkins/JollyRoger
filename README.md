@@ -12,3 +12,5 @@ Code for our 2019 Savage Soccer robot. PID, "path following", the works.
 
 ## Competition
 Keep you posted
+
+Second place is cool i guess
