@@ -97,8 +97,8 @@ void armTo(Position current){
 	float error1 = 0;
 	float error2 = 0;
 	int target = 0;
-	int silverTarget = 20;
-	int goldTarget = 622;
+	int silverTarget = 19;
+	int goldTarget = 620;
 	int backTarget = 2000;
 	float value;
 	float avgError;
@@ -231,7 +231,7 @@ task autonomous()
 	// Close claw
 	drive(0,0);
 	closeClaw();
-	wait1Msec(500);
+	wait1Msec(1000);
 
 	// Drive -4
 	target = -20.0;
@@ -302,7 +302,7 @@ task autonomous()
 
 	// Arm dump
 	clearTimer(T1);
-	while (time1[T1] < 1000) {
+	while (time1[T1] < 1050) {
 		armTo(kDump);
 		closeClaw();
 	}
@@ -315,6 +315,7 @@ task autonomous()
 	}
 
 	// Drive -6
+
 	target = -20.0;
 	error = 100;
 	initLeft = getLeftEnc();
@@ -331,8 +332,9 @@ task autonomous()
 		closeClaw();
 	}
 
+
 	// Drive 33
-	target = 44;
+	target = 40;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -351,10 +353,10 @@ task autonomous()
 	// Close claw
 	drive(0,0);
 	closeClaw();
-	wait1Msec(500);
+	wait1Msec(1000);
 
 	// Drive -30
-	target = -34;
+	target = -33;
 	error = 100;
 	initLeft = getLeftEnc();
 	initRight = getRightEnc();
@@ -369,7 +371,7 @@ task autonomous()
 
 	// Arm dump
 	clearTimer(T1);
-	while (time1[T1] < 1500) {
+	while (time1[T1] < 1000) {
 		armTo(kDump);
 		closeClaw();
 	}
